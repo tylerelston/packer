@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "lz-string"
 import { v4 as uuidv4 } from "uuid"
 
-import { DEFAULT_CATEGORY, type PackingItem } from "@/types/schema"
+import { DEFAULT_CATEGORY, LAST_MINUTE_CATEGORY, type PackingItem } from "@/types/schema"
 
 const STORAGE_KEY = "packer.items.v1"
 const CATEGORY_KEY = "packer.categories.v1"
 const HASH_KEY = "p"
 const SORT_DELAY_MS = 800
-const DEFAULT_CATEGORIES = [DEFAULT_CATEGORY]
+const DEFAULT_CATEGORIES = [DEFAULT_CATEGORY, LAST_MINUTE_CATEGORY]
 
 const seedItems = () => {
   const now = Date.now()
@@ -16,16 +16,17 @@ const seedItems = () => {
     createItem("Passport", "Documents", false, now + 1),
     createItem("Phone charger", "Tech", false, now + 2),
     createItem("Socks", "Clothing", false, now + 3),
-    createItem("Toothbrush", "Toiletries", false, now + 4),
-    createItem("Water bottle", "Misc", false, now + 5),
+    createItem("Water bottle", "Misc", false, now + 4),
+    createItem("Toothbrush", LAST_MINUTE_CATEGORY, false, now + 5),
+    createItem("Wallet", LAST_MINUTE_CATEGORY, false, now + 6),
   ]
 }
 
 const titleCase = (value: string) =>
   value
-    .split(" ")
-    .map((word) => (word ? word[0]!.toUpperCase() + word.slice(1).toLowerCase() : ""))
-    .join(" ")
+    .replace(/(?:^|[\s-/])\w/g, (match) => match.toUpperCase())
+    .replace(/(\w)(\w*)/g, (_, first, rest) => first + rest.toLowerCase())
+    .replace(/(?:^|[\s-/])\w/g, (match) => match.toUpperCase())
 
 const normalizeCategoryName = (value: string) => {
   const trimmed = value.trim()
@@ -391,6 +392,21 @@ export function usePackingState() {
     setItems([])
   }, [setItems])
 
+  const resetToDefault = useCallback(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY)
+        window.localStorage.removeItem(CATEGORY_KEY)
+      } catch {
+        // ignore
+      }
+      window.history.replaceState(null, "", window.location.pathname)
+    }
+    const seeds = seedItems()
+    setItems(seeds)
+    setCategoryList(DEFAULT_CATEGORIES)
+  }, [setCategoryList, setItems])
+
   const categories = useMemo(() => {
     const normalizedList = getCategoryOrder(
       items,
@@ -451,6 +467,7 @@ export function usePackingState() {
     deleteCategory,
     moveItemToCategory,
     resetItems,
+    resetToDefault,
     shareUrl,
     share,
   }

@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
-import type { PackingItem as PackingItemType } from "@/types/schema"
+import { LAST_MINUTE_CATEGORY, type PackingItem as PackingItemType } from "@/types/schema"
 
 import { PackingItem } from "./PackingItem"
 
@@ -50,9 +50,17 @@ export function CategorySection({
   const [isDragOver, setIsDragOver] = useState(false)
   const isRow = layout === "row"
 
+  const isLastMinute =
+    title.toLowerCase() === LAST_MINUTE_CATEGORY.toLowerCase() ||
+    title.toLowerCase() === "last minute"
+
   return (
     <Card
-      className={`group/card h-full border-zinc-700/70 bg-zinc-900/55 py-2 ${isDragOver ? "ring-1 ring-zinc-400/70" : ""}`}
+      className={cn(
+        "group/card h-full border-zinc-700/70 bg-zinc-900/55 py-2 transition-all",
+        isDragOver && "ring-1 ring-zinc-400/70",
+        isLastMinute && "border-primary-yellow/30 bg-primary-yellow/[0.03]",
+      )}
       onDragOver={(event) => {
         if (!onItemDrop) return
         event.preventDefault()
@@ -83,6 +91,7 @@ export function CategorySection({
                   checkedCount === items.length &&
                     items.length > 0 &&
                     "border-primary-green/50 text-primary-green",
+                  isLastMinute && "border-primary-yellow/40 text-primary-yellow",
                 )}
               >
                 {checkedCount}/{items.length}
@@ -126,6 +135,7 @@ export function CategorySection({
                     checkedCount === items.length &&
                       items.length > 0 &&
                       "border-primary-green/50 text-primary-green",
+                    isLastMinute && "border-primary-yellow/40 text-primary-yellow",
                   )}
                 >
                   {checkedCount}/{items.length}

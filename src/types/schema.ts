@@ -12,3 +12,4 @@ export type PackingItem = {
 }
 
 export const DEFAULT_CATEGORY = "Uncategorized"
+export const LAST_MINUTE_CATEGORY = "Last-Minute"

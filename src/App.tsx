@@ -6,7 +6,7 @@ import {
   type ClipboardEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { RotateCcw, Share2 } from "lucide-react";
+import { ChevronDown, RotateCcw, Share2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ import { CategorySection } from "@/components/CategorySection";
 import { usePackingState } from "@/hooks/usePackingState";
 import { DEFAULT_CATEGORY } from "@/types/schema";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import confetti from "canvas-confetti";
 
 const SUGGESTED_CATEGORIES = [
@@ -36,6 +42,7 @@ export function App() {
     deleteCategory,
     moveItemToCategory,
     resetItems,
+    resetToDefault,
     share,
   } = usePackingState();
   const [draft, setDraft] = useState("");
@@ -224,14 +231,35 @@ export function App() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={resetItems}
-                className="border border-zinc-700/60 bg-zinc-800/70 text-zinc-100 hover:bg-zinc-700"
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    className="border border-zinc-700/60 bg-zinc-800/70 text-zinc-100 hover:bg-zinc-700"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset
+                    <ChevronDown className="ml-2 h-3 w-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 border-zinc-700 bg-zinc-900 text-zinc-100"
+                >
+                  <DropdownMenuItem
+                    onClick={resetItems}
+                    className="cursor-pointer focus:bg-zinc-800 focus:text-zinc-50"
+                  >
+                    Empty List
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={resetToDefault}
+                    className="cursor-pointer focus:bg-zinc-800 focus:text-zinc-50"
+                  >
+                    Restore Defaults
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button onClick={handleShare} disabled={sharing}>
                 <Share2 className="mr-2 h-4 w-4" />
                 Share

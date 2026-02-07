@@ -318,7 +318,7 @@ export function App() {
                   updateCategoryQuery(target.value, target.selectionStart);
                 }}
                 placeholder=""
-                className="h-9 max-h-24 w-full resize-none rounded-full border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs leading-[1.4] text-zinc-100 outline-none placeholder:text-zinc-500"
+                className="no-scrollbar h-9 max-h-24 w-full resize-none rounded-full border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs leading-[1.4] text-zinc-100 outline-none placeholder:text-zinc-500"
               />
               {draft.length === 0 ? (
                 <div className="pointer-events-none absolute inset-y-0 left-4 right-4 flex items-center">

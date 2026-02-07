@@ -15,6 +15,7 @@ import { CategorySection } from "@/components/CategorySection";
 import { usePackingState } from "@/hooks/usePackingState";
 import { DEFAULT_CATEGORY } from "@/types/schema";
 import { cn } from "@/lib/utils";
+import confetti from "canvas-confetti";
 
 const SUGGESTED_CATEGORIES = [
   "Clothing",
@@ -70,6 +71,39 @@ export function App() {
     }, 2600);
     return () => window.clearInterval(timer);
   }, [hints.length]);
+
+  const lastProgressRef = useRef(stats.progress);
+  useEffect(() => {
+    if (stats.progress === 100 && lastProgressRef.current < 100 && stats.total > 0) {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) =>
+        Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        });
+      }, 250);
+    }
+    lastProgressRef.current = stats.progress;
+  }, [stats.progress, stats.total]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -384,7 +418,7 @@ export function App() {
                 </div>
               ) : null}
               {categoryQuery && filteredSuggestions.length ? (
-                <div className="absolute left-0 top-full z-40 mt-2 w-full rounded-xl border border-zinc-700/80 bg-zinc-900/95 p-1 shadow-xl shadow-black/40">
+                <div className="absolute bottom-full left-0 z-40 mb-2 w-full rounded-xl border border-zinc-700/80 bg-zinc-900/95 p-1 shadow-xl shadow-black/40">
                   {filteredSuggestions.map((category) => (
                     <button
                       key={category}

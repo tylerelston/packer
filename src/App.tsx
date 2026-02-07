@@ -47,6 +47,7 @@ export function App() {
   } | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const highlighterRef = useRef<HTMLDivElement>(null);
 
   const hints = useMemo(
     () => [
@@ -70,10 +71,12 @@ export function App() {
 
   useEffect(() => {
     const textarea = inputRef.current;
+    const highlighter = highlighterRef.current;
     if (!textarea) return;
     textarea.style.height = "0px";
     const next = Math.min(textarea.scrollHeight, 96);
     textarea.style.height = `${next}px`;
+    if (highlighter) highlighter.style.height = `${next}px`;
   }, [draft]);
 
   const handleAdd = () => {
@@ -283,8 +286,29 @@ export function App() {
 
       <div className="pointer-events-none fixed inset-x-0 bottom-8 z-30 flex justify-center px-4">
         <div className="pointer-events-auto w-full max-w-2xl">
-          <div className="flex items-center gap-2 rounded-full border border-zinc-700/80 bg-zinc-900/80 p-2 shadow-lg shadow-black/30 backdrop-blur">
+          <div className="flex items-center gap-2 rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-2 shadow-lg shadow-black/30 backdrop-blur">
             <div className="relative flex-1">
+              <div
+                ref={highlighterRef}
+                aria-hidden="true"
+                className="no-scrollbar pointer-events-none absolute inset-0 overflow-y-auto whitespace-pre-wrap break-words border border-transparent px-4 py-2 text-xs leading-[1.4] text-zinc-100"
+              >
+                {draft.split(/(#\w+)/g).map((part, i) =>
+                  part.startsWith("#") && part.length > 1 ? (
+                    <span
+                      key={i}
+                      className="rounded bg-zinc-700/50 text-zinc-50 ring-1 ring-zinc-600/50"
+                    >
+                      {part}
+                    </span>
+                  ) : (
+                    <span key={i}>{part}</span>
+                  ),
+                )}
+                {/* Add a zero-width space to handle trailing empty lines if needed, 
+                    though textarea scroll sync is usually enough */}
+                {draft.endsWith("\n") ? "\n" : ""}
+              </div>
               <textarea
                 ref={inputRef}
                 value={draft}
@@ -295,6 +319,12 @@ export function App() {
                     event.target.value,
                     event.target.selectionStart,
                   );
+                }}
+                onScroll={(event) => {
+                  if (highlighterRef.current) {
+                    highlighterRef.current.scrollTop =
+                      event.currentTarget.scrollTop;
+                  }
                 }}
                 onClick={(event) => {
                   const target = event.target as HTMLTextAreaElement;
@@ -322,7 +352,7 @@ export function App() {
                   updateCategoryQuery(target.value, target.selectionStart);
                 }}
                 placeholder=""
-                className="no-scrollbar h-9 max-h-24 w-full resize-none rounded-full border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs leading-[1.4] text-zinc-100 outline-none placeholder:text-zinc-500"
+                className="no-scrollbar h-9 max-h-24 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs leading-[1.4] text-transparent caret-zinc-100 outline-none placeholder:text-zinc-500"
               />
               {draft.length === 0 ? (
                 <div className="pointer-events-none absolute inset-y-0 left-4 right-4 flex items-center">

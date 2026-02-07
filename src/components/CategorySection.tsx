@@ -3,6 +3,7 @@ import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import type { PackingItem as PackingItemType } from "@/types/schema"
 
 import { PackingItem } from "./PackingItem"
@@ -37,7 +38,7 @@ export function CategorySection({
 
   return (
     <Card
-      className={`h-full border-zinc-700/70 bg-zinc-900/55 ${isDragOver ? "ring-1 ring-zinc-400/70" : ""}`}
+      className={`h-full border-zinc-700/70 bg-zinc-900/55 py-2 ${isDragOver ? "ring-1 ring-zinc-400/70" : ""}`}
       onDragOver={(event) => {
         if (!onItemDrop) return
         event.preventDefault()
@@ -61,7 +62,15 @@ export function CategorySection({
               <h2 className="text-sm font-semibold text-zinc-100">
                 {title}
               </h2>
-              <Badge variant="outline" className="border-zinc-800 px-1.5 py-0 text-[10px] text-zinc-300">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "border-zinc-800 px-1.5 py-0 text-[10px] text-zinc-300",
+                  checkedCount === items.length &&
+                    items.length > 0 &&
+                    "border-primary-green/50 text-primary-green",
+                )}
+              >
                 {checkedCount}/{items.length}
               </Badge>
             </div>
@@ -83,20 +92,28 @@ export function CategorySection({
         </CardContent>
       ) : (
         <>
-          <CardHeader className="px-3 pb-1.5 pt-2.5">
+          <CardHeader className="px-3 pb-1.5 pt-0">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-zinc-100">
                 {title}
               </h2>
               <div className="flex items-center gap-2 text-[10px] text-zinc-500">
-                <Badge variant="outline" className="border-zinc-800 px-1.5 py-0 text-[10px] text-zinc-300">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "border-zinc-800 px-1.5 py-0 text-[10px] text-zinc-300",
+                    checkedCount === items.length &&
+                      items.length > 0 &&
+                      "border-primary-green/50 text-primary-green",
+                  )}
+                >
                   {checkedCount}/{items.length}
                 </Badge>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            <motion.div layout className="grid gap-1.5">
+          <CardContent className="px-3 pb-1 pt-0">
+            <motion.div layout className="grid gap-1">
               <AnimatePresence initial={false}>
                 {items.map((item) => (
                   <PackingItem

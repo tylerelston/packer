@@ -32,7 +32,7 @@ export function PackingItem({
       <Card
         className={cn(
           "group cursor-grab border border-zinc-800/70 bg-zinc-900/50 transition-colors hover:border-zinc-600 active:cursor-grabbing",
-          item.checked && "opacity-70"
+          item.checked && "border-primary-green/30 bg-primary-green/5 opacity-80"
         )}
         role="button"
         tabIndex={0}
@@ -51,7 +51,7 @@ export function PackingItem({
         }}
         onDragEnd={() => onDragEnd?.()}
       >
-        <CardContent className="flex items-center gap-1.5 p-1.5">
+        <CardContent className="flex h-8 items-center gap-1.5 px-1.5 py-1">
           <Checkbox
             checked={item.checked}
             onCheckedChange={handleToggle}
@@ -60,8 +60,8 @@ export function PackingItem({
           <div className="min-w-0 flex-1">
             <div
               className={cn(
-                "truncate text-[11px] font-medium text-zinc-100",
-                item.checked && "text-zinc-400 line-through"
+                "truncate text-[11px] font-medium text-zinc-100 transition-colors",
+                item.checked && "text-primary-green"
               )}
             >
               {item.name}

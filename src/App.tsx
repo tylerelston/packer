@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { CategorySection } from "@/components/CategorySection";
 import { usePackingState } from "@/hooks/usePackingState";
 import { DEFAULT_CATEGORY } from "@/types/schema";
+import { cn } from "@/lib/utils";
 
 const SUGGESTED_CATEGORIES = [
   "Clothing",
@@ -175,8 +176,8 @@ export function App() {
 
   return (
     <div className="dark min-h-screen bg-zinc-900 text-zinc-100">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 px-4 py-6 pb-28">
-        <header className="space-y-3">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 pb-28">
+        <header className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.35em] text-zinc-400">
@@ -202,18 +203,27 @@ export function App() {
               </Button>
             </div>
           </div>
-          <div className="grid gap-3 rounded-2xl border border-zinc-800/70 bg-zinc-800/50 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="grid gap-3 rounded-2xl border border-zinc-800/70 bg-zinc-800/50 p-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-zinc-400">
                 <span>{stats.checked} packed</span>
                 <span>{stats.total} total</span>
               </div>
-              <Progress value={stats.progress} className="h-2" />
+              <Progress
+                value={stats.progress}
+                className={cn(
+                  "h-2",
+                  stats.progress === 100 && "[&>[data-slot=progress-indicator]]:bg-primary-green",
+                )}
+              />
             </div>
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <Badge
                 variant="outline"
-                className="border-zinc-600 text-zinc-200"
+                className={cn(
+                  "border-zinc-600 text-zinc-200",
+                  stats.progress === 100 && "border-primary-green/50 text-primary-green",
+                )}
               >
                 {stats.checked}/{stats.total} packed
               </Badge>
@@ -239,7 +249,7 @@ export function App() {
           ) : null}
           {showUncategorizedStrip ? (
             <div
-              className="flex items-center justify-between rounded-full border border-dashed border-zinc-600/70 bg-zinc-900/50 px-3 py-1 text-[11px] text-zinc-300"
+              className="flex items-center justify-between rounded-full border border-dashed border-zinc-600/70 bg-zinc-900/50 px-4 py-3 text-[11px] text-zinc-300"
               onDragOver={(event) => {
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
@@ -258,7 +268,7 @@ export function App() {
             </div>
           ) : null}
           {categorized.length ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {categorized.map((group) => (
                 <CategorySection
                   key={group.category}

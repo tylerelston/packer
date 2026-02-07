@@ -175,9 +175,7 @@ export function App() {
               <p className="text-xs uppercase tracking-[0.35em] text-zinc-400">
                 Travel Kit
               </p>
-              <h1 className="text-2xl font-semibold text-zinc-50">
-                Packer Active List
-              </h1>
+              <h1 className="text-2xl font-semibold text-zinc-50">Packer</h1>
               <p className="text-xs text-zinc-400">
                 Tap anywhere on a card to mark it packed.
               </p>

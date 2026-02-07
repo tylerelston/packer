@@ -50,9 +50,13 @@ export function App() {
 
   const hints = useMemo(
     () => [
-      "Add item (press Enter)",
-      "#Toiletries Toothbrush",
+      "Add items (press Enter)",
       "Socks, Shirt, Pants #Clothing",
+      "#Toiletries Toothbrush, Toothpaste",
+      "Passport, Boarding Pass #Documents",
+      "Camera, Charger #Tech",
+      "Sunscreen, Sunglasses #Misc",
+      "Paste a list from your notes",
     ],
     [],
   );

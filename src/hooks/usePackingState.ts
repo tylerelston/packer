@@ -195,7 +195,7 @@ function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
 
 const parseLine = (line: string) => {
   let working = line.trim()
-  if (!working) return null
+  if (!working) return []
 
   let category = DEFAULT_CATEGORY
   const tokens = working.split(/\s+/)
@@ -210,12 +210,18 @@ const parseLine = (line: string) => {
     remaining.push(token)
   }
   working = remaining.join(" ").trim()
-  if (!working) return null
+  if (!working) return []
 
-  return {
-    name: working,
+  // Split by commas to support multiple items per line
+  const names = working
+    .split(",")
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0)
+
+  return names.map((name) => ({
+    name,
     category,
-  }
+  }))
 }
 
 export type PackingStats = {
@@ -296,9 +302,7 @@ export function usePackingState() {
   const addItems = useCallback(
     (rawInput: string) => {
       const lines = rawInput.split(/\r?\n/)
-      const parsed = lines
-        .map((line) => parseLine(line))
-        .filter((line): line is NonNullable<ReturnType<typeof parseLine>> => Boolean(line))
+      const parsed = lines.flatMap((line) => parseLine(line))
 
       if (!parsed.length) return 0
 

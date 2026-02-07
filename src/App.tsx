@@ -1,35 +1,22 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ClipboardEvent,
-} from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, RotateCcw, Share2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react"
+import { ChevronDown, RotateCcw, Share2 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { CategorySection } from "@/components/CategorySection";
-import { usePackingState } from "@/hooks/usePackingState";
-import { DEFAULT_CATEGORY } from "@/types/schema";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import confetti from "canvas-confetti";
-
-const SUGGESTED_CATEGORIES = [
-  "Clothing",
-  "Toiletries",
-  "Tech",
-  "Documents",
-  "Misc",
-];
+} from "@/components/ui/dropdown-menu"
+import { CategorySection } from "@/components/CategorySection"
+import { PackingInput } from "@/components/PackingInput"
+import { usePackingState } from "@/hooks/usePackingState"
+import { DEFAULT_CATEGORY } from "@/types/schema"
+import { cn } from "@/lib/utils"
+import { triggerCompletionConfetti } from "@/utils/celebrations"
+import { TIMING } from "@/constants"
 
 export function App() {
   const {
@@ -44,177 +31,35 @@ export function App() {
     resetItems,
     resetToDefault,
     share,
-  } = usePackingState();
-  const [draft, setDraft] = useState("");
-  const [shareNote, setShareNote] = useState("");
-  const [sharing, setSharing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [activeHint, setActiveHint] = useState(0);
-  const [categoryQuery, setCategoryQuery] = useState<{
-    query: string;
-    start: number;
-    end: number;
-  } | null>(null);
+  } = usePackingState()
 
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const highlighterRef = useRef<HTMLDivElement>(null);
+  const [shareNote, setShareNote] = useState("")
+  const [sharing, setSharing] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
-  const hints = useMemo(
-    () => [
-      "Add items (press Enter)",
-      "Socks, Shirt, Pants #Clothing",
-      "#Toiletries Toothbrush, Toothpaste",
-      "Passport, Boarding Pass #Documents",
-      "Camera, Charger #Tech",
-      "Sunscreen, Sunglasses #Misc",
-      "Paste a list from your notes",
-    ],
-    [],
-  );
+  const lastProgressRef = useRef(stats.progress)
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveHint((current) => (current + 1) % hints.length);
-    }, 2600);
-    return () => window.clearInterval(timer);
-  }, [hints.length]);
-
-  const lastProgressRef = useRef(stats.progress);
+  // Trigger confetti when packing is complete
   useEffect(() => {
     if (stats.progress === 100 && lastProgressRef.current < 100 && stats.total > 0) {
-      const duration = 3 * 1000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-      const randomInRange = (min: number, max: number) =>
-        Math.random() * (max - min) + min;
-
-      const interval: any = setInterval(function () {
-        const timeLeft = animationEnd - Date.now();
-
-        if (timeLeft <= 0) {
-          return clearInterval(interval);
-        }
-
-        const particleCount = 50 * (timeLeft / duration);
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        });
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        });
-      }, 250);
+      triggerCompletionConfetti()
     }
-    lastProgressRef.current = stats.progress;
-  }, [stats.progress, stats.total]);
-
-  useEffect(() => {
-    const textarea = inputRef.current;
-    const highlighter = highlighterRef.current;
-    if (!textarea) return;
-    textarea.style.height = "0px";
-    const next = Math.min(textarea.scrollHeight, 96);
-    textarea.style.height = `${next}px`;
-    if (highlighter) highlighter.style.height = `${next}px`;
-  }, [draft]);
-
-  const handleAdd = () => {
-    const added = addItems(draft);
-    if (added > 0) {
-      setDraft("");
-      setCategoryQuery(null);
-    }
-  };
-
-  const handlePaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
-    const text = event.clipboardData.getData("text");
-    if (text.includes("\n")) {
-      event.preventDefault();
-      addItems(text);
-      setDraft("");
-      setCategoryQuery(null);
-    }
-  };
+    lastProgressRef.current = stats.progress
+  }, [stats.progress, stats.total])
 
   const handleShare = async () => {
-    if (sharing) return;
-    setSharing(true);
-    const result = await share();
-    setShareNote(result.copied ? "Link copied." : "Share URL ready.");
-    window.setTimeout(() => setShareNote(""), 2400);
-    setSharing(false);
-  };
+    if (sharing) return
+    setSharing(true)
+    const result = await share()
+    setShareNote(result.copied ? "Link copied." : "Share URL ready.")
+    window.setTimeout(() => setShareNote(""), TIMING.SHARE_NOTE_DURATION_MS)
+    setSharing(false)
+  }
 
-  const categorySuggestions = useMemo(() => {
-    const merged = [...categoryList, ...SUGGESTED_CATEGORIES].filter(
-      (category) => category !== DEFAULT_CATEGORY,
-    );
-    const seen = new Set<string>();
-    return merged.filter((category) => {
-      if (seen.has(category)) return false;
-      seen.add(category);
-      return true;
-    });
-  }, [categoryList]);
-
-  const updateCategoryQuery = (value: string, caret: number | null) => {
-    if (caret === null) {
-      setCategoryQuery(null);
-      return;
-    }
-    const left = value.slice(0, caret);
-    const match = /(?:^|\s)#([^\s#]*)$/.exec(left);
-    if (!match) {
-      setCategoryQuery(null);
-      return;
-    }
-    const start = left.lastIndexOf("#");
-    setCategoryQuery({
-      query: match[1] ?? "",
-      start,
-      end: caret,
-    });
-  };
-
-  const filteredSuggestions = useMemo(() => {
-    if (!categoryQuery) return [];
-    const query = categoryQuery.query.toLowerCase();
-    return categorySuggestions
-      .filter((category) => category.toLowerCase().startsWith(query))
-      .slice(0, 6);
-  }, [categoryQuery, categorySuggestions]);
-
-  const applySuggestion = (category: string) => {
-    if (!categoryQuery) return;
-    const before = draft.slice(0, categoryQuery.start);
-    const after = draft.slice(categoryQuery.end);
-    const needsSpace = after.length === 0 || !after.startsWith(" ");
-    const nextValue = `${before}#${category}${needsSpace ? " " : ""}${after}`;
-    setDraft(nextValue);
-    setCategoryQuery(null);
-    window.requestAnimationFrame(() => {
-      const input = inputRef.current;
-      if (!input) return;
-      const position = (before + `#${category}` + (needsSpace ? " " : ""))
-        .length;
-      input.setSelectionRange(position, position);
-      input.focus();
-    });
-  };
-
-  const uncategorized = categories.find(
-    (group) => group.category === DEFAULT_CATEGORY,
-  );
-  const categorized = categories.filter(
-    (group) => group.category !== DEFAULT_CATEGORY,
-  );
-  const hasAnyItems = categories.some((group) => group.items.length > 0);
-  const showUncategorizedStrip =
-    isDragging && (!uncategorized || uncategorized.items.length === 0);
+  const uncategorized = categories.find((group) => group.category === DEFAULT_CATEGORY)
+  const categorized = categories.filter((group) => group.category !== DEFAULT_CATEGORY)
+  const hasAnyItems = categories.some((group) => group.items.length > 0)
+  const showUncategorizedStrip = isDragging && (!uncategorized || uncategorized.items.length === 0)
 
   return (
     <div className="dark min-h-screen bg-zinc-900 text-zinc-100">
@@ -222,13 +67,9 @@ export function App() {
         <header className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.35em] text-zinc-400">
-                Travel Kit
-              </p>
+              <p className="text-xs uppercase tracking-[0.35em] text-zinc-400">Travel Kit</p>
               <h1 className="text-2xl font-semibold text-zinc-50">Packer</h1>
-              <p className="text-xs text-zinc-400">
-                Tap anywhere on a card to mark it packed.
-              </p>
+              <p className="text-xs text-zinc-400">Tap anywhere on a card to mark it packed.</p>
             </div>
             <div className="flex items-center gap-2">
               <DropdownMenu>
@@ -276,7 +117,7 @@ export function App() {
                 value={stats.progress}
                 className={cn(
                   "h-2",
-                  stats.progress === 100 && "[&>[data-slot=progress-indicator]]:bg-primary-green",
+                  stats.progress === 100 && "[&>[data-slot=progress-indicator]]:bg-primary-green"
                 )}
               />
             </div>
@@ -285,14 +126,12 @@ export function App() {
                 variant="outline"
                 className={cn(
                   "border-zinc-600 text-zinc-200",
-                  stats.progress === 100 && "border-primary-green/50 text-primary-green",
+                  stats.progress === 100 && "border-primary-green/50 text-primary-green"
                 )}
               >
                 {stats.checked}/{stats.total} packed
               </Badge>
-              {shareNote ? (
-                <span className="text-xs text-zinc-400">{shareNote}</span>
-              ) : null}
+              {shareNote ? <span className="text-xs text-zinc-400">{shareNote}</span> : null}
             </div>
           </div>
         </header>
@@ -315,14 +154,14 @@ export function App() {
             <div
               className="flex items-center justify-between rounded-full border border-dashed border-zinc-600/70 bg-zinc-900/50 px-4 py-3 text-[11px] text-zinc-300"
               onDragOver={(event) => {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
+                event.preventDefault()
+                event.dataTransfer.dropEffect = "move"
               }}
               onDrop={(event) => {
-                event.preventDefault();
-                const id = event.dataTransfer.getData("text/plain");
-                if (id) moveItemToCategory(id, DEFAULT_CATEGORY);
-                setIsDragging(false);
+                event.preventDefault()
+                const id = event.dataTransfer.getData("text/plain")
+                if (id) moveItemToCategory(id, DEFAULT_CATEGORY)
+                setIsDragging(false)
               }}
             >
               <span>Drop here to uncategorize</span>
@@ -359,124 +198,9 @@ export function App() {
         </section>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-8 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-2xl">
-          <div className="flex items-center gap-2 rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-2 shadow-lg shadow-black/30 backdrop-blur">
-            <div className="relative flex-1">
-              <div
-                ref={highlighterRef}
-                aria-hidden="true"
-                className="no-scrollbar pointer-events-none absolute inset-0 overflow-y-auto whitespace-pre-wrap break-words border border-transparent px-4 py-2 text-xs leading-[1.4] text-zinc-100"
-              >
-                {draft.split(/(#\w+)/g).map((part, i) =>
-                  part.startsWith("#") && part.length > 1 ? (
-                    <span
-                      key={i}
-                      className="rounded bg-zinc-700/50 text-zinc-50 ring-1 ring-zinc-600/50"
-                    >
-                      {part}
-                    </span>
-                  ) : (
-                    <span key={i}>{part}</span>
-                  ),
-                )}
-                {/* Add a zero-width space to handle trailing empty lines if needed, 
-                    though textarea scroll sync is usually enough */}
-                {draft.endsWith("\n") ? "\n" : ""}
-              </div>
-              <textarea
-                ref={inputRef}
-                value={draft}
-                rows={1}
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  updateCategoryQuery(
-                    event.target.value,
-                    event.target.selectionStart,
-                  );
-                }}
-                onScroll={(event) => {
-                  if (highlighterRef.current) {
-                    highlighterRef.current.scrollTop =
-                      event.currentTarget.scrollTop;
-                  }
-                }}
-                onClick={(event) => {
-                  const target = event.target as HTMLTextAreaElement;
-                  updateCategoryQuery(target.value, target.selectionStart);
-                }}
-                onSelect={(event) => {
-                  const target = event.target as HTMLTextAreaElement;
-                  updateCategoryQuery(target.value, target.selectionStart);
-                }}
-                onBlur={() => setCategoryQuery(null)}
-                onPaste={handlePaste}
-                onKeyDown={(event) => {
-                  if (event.key === "Tab" && filteredSuggestions.length) {
-                    event.preventDefault();
-                    applySuggestion(filteredSuggestions[0]!);
-                    return;
-                  }
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    handleAdd();
-                  }
-                }}
-                onKeyUp={(event) => {
-                  const target = event.currentTarget;
-                  updateCategoryQuery(target.value, target.selectionStart);
-                }}
-                placeholder=""
-                className="no-scrollbar h-9 max-h-24 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs leading-[1.4] text-transparent caret-zinc-100 outline-none placeholder:text-zinc-500"
-              />
-              {draft.length === 0 ? (
-                <div className="pointer-events-none absolute inset-y-0 left-4 right-4 flex items-center">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={activeHint}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.25 }}
-                      className="text-xs text-zinc-500"
-                    >
-                      {hints[activeHint]}
-                    </motion.span>
-                  </AnimatePresence>
-                </div>
-              ) : null}
-              {categoryQuery && filteredSuggestions.length ? (
-                <div className="absolute bottom-full left-0 z-40 mb-2 w-full rounded-xl border border-zinc-700/80 bg-zinc-900/95 p-1 shadow-xl shadow-black/40">
-                  {filteredSuggestions.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-zinc-200 transition hover:bg-zinc-800/70"
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        applySuggestion(category);
-                      }}
-                    >
-                      <span>{category}</span>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                        Tab
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <Button
-              onClick={handleAdd}
-              className="h-9 rounded-full px-4 text-xs"
-            >
-              Add
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PackingInput categoryList={categoryList} onAddItems={addItems} />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

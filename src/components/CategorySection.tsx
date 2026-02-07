@@ -4,21 +4,16 @@ import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { cn } from "@/lib/utils"
-import { LAST_MINUTE_CATEGORY, type PackingItem as PackingItemType } from "@/types/schema"
+import {
+  LAST_MINUTE_CATEGORY,
+  type LayoutMode,
+  type PackingItem as PackingItemType,
+} from "@/types/schema"
 
 import { PackingItem } from "./PackingItem"
+
 
 type CategorySectionProps = {
   title: string
@@ -26,11 +21,12 @@ type CategorySectionProps = {
   onToggle: (id: string) => void
   onDelete?: (id: string) => void
   onItemDrop?: (itemId: string, category: string) => void
-  layout?: "column" | "row"
+  layout?: LayoutMode
   onDragStart?: (id: string) => void
   onDragEnd?: () => void
   onDeleteCategory?: (category: string) => void
 }
+
 
 export function CategorySection({
   title,
@@ -172,46 +168,45 @@ export function CategorySection({
   )
 }
 
-function DeleteCategoryButton({ title, itemCount, onDelete }: { title: string, itemCount: number, onDelete: () => void }) {
+function DeleteCategoryButton({
+  title,
+  itemCount,
+  onDelete,
+}: {
+  title: string
+  itemCount: number
+  onDelete: () => void
+}) {
+  const trigger = (
+    <button
+      className="ml-1 opacity-0 transition-opacity hover:text-red-400 group-hover/card:opacity-100"
+      aria-label={`Delete ${title} category`}
+    >
+      <Trash2 className="h-3 w-3" />
+    </button>
+  )
+
   if (itemCount === 0) {
-    return (
-      <button
-        onClick={onDelete}
-        className="ml-1 opacity-0 transition-opacity hover:text-red-400 group-hover/card:opacity-100"
-        aria-label={`Delete ${title} category`}
-      >
-        <Trash2 className="h-3 w-3" />
-      </button>
-    )
+    return <div onClick={onDelete}>{trigger}</div>
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <button
-          className="ml-1 opacity-0 transition-opacity hover:text-red-400 group-hover/card:opacity-100"
-          aria-label={`Delete ${title} category`}
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete category?</AlertDialogTitle>
-          <AlertDialogDescription className="text-zinc-400">
-            This will permanently delete <span className="text-zinc-100 font-medium">"{title}"</span> and all <span className="text-zinc-100 font-medium">{itemCount} items</span>. This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700">Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onDelete}
-            className="bg-red-500 text-white hover:bg-red-600 border-none"
-          >
-            Delete Everything
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      trigger={trigger}
+      title="Delete category?"
+      description={
+        <>
+          This will permanently delete{" "}
+          <span className="font-medium text-zinc-100">"{title}"</span> and all{" "}
+          <span className="font-medium text-zinc-100">{itemCount} items</span>. This action
+          cannot be undone.
+        </>
+      }
+      confirmText="Delete Everything"
+      cancelText="Cancel"
+      onConfirm={onDelete}
+      variant="destructive"
+    />
   )
 }
+

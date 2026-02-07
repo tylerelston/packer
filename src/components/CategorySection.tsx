@@ -1,8 +1,20 @@
 import { AnimatePresence, motion } from "framer-motion"
+import { Trash2 } from "lucide-react"
 import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import type { PackingItem as PackingItemType } from "@/types/schema"
 
@@ -17,6 +29,7 @@ type CategorySectionProps = {
   layout?: "column" | "row"
   onDragStart?: (id: string) => void
   onDragEnd?: () => void
+  onDeleteCategory?: (category: string) => void
 }
 
 export function CategorySection({
@@ -28,6 +41,7 @@ export function CategorySection({
   layout = "column",
   onDragStart,
   onDragEnd,
+  onDeleteCategory,
 }: CategorySectionProps) {
   const checkedCount = items.reduce(
     (count, item) => count + (item.checked ? 1 : 0),
@@ -38,7 +52,7 @@ export function CategorySection({
 
   return (
     <Card
-      className={`h-full border-zinc-700/70 bg-zinc-900/55 py-2 ${isDragOver ? "ring-1 ring-zinc-400/70" : ""}`}
+      className={`group/card h-full border-zinc-700/70 bg-zinc-900/55 py-2 ${isDragOver ? "ring-1 ring-zinc-400/70" : ""}`}
       onDragOver={(event) => {
         if (!onItemDrop) return
         event.preventDefault()
@@ -73,6 +87,13 @@ export function CategorySection({
               >
                 {checkedCount}/{items.length}
               </Badge>
+              {onDeleteCategory && (
+                <DeleteCategoryButton
+                  title={title}
+                  itemCount={items.length}
+                  onDelete={() => onDeleteCategory(title)}
+                />
+              )}
             </div>
             <motion.div layout className="flex flex-wrap gap-1.5">
               <AnimatePresence initial={false}>
@@ -109,6 +130,13 @@ export function CategorySection({
                 >
                   {checkedCount}/{items.length}
                 </Badge>
+                {onDeleteCategory && (
+                  <DeleteCategoryButton
+                    title={title}
+                    itemCount={items.length}
+                    onDelete={() => onDeleteCategory(title)}
+                  />
+                )}
               </div>
             </div>
           </CardHeader>
@@ -131,5 +159,49 @@ export function CategorySection({
         </>
       )}
     </Card>
+  )
+}
+
+function DeleteCategoryButton({ title, itemCount, onDelete }: { title: string, itemCount: number, onDelete: () => void }) {
+  if (itemCount === 0) {
+    return (
+      <button
+        onClick={onDelete}
+        className="ml-1 opacity-0 transition-opacity hover:text-red-400 group-hover/card:opacity-100"
+        aria-label={`Delete ${title} category`}
+      >
+        <Trash2 className="h-3 w-3" />
+      </button>
+    )
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          className="ml-1 opacity-0 transition-opacity hover:text-red-400 group-hover/card:opacity-100"
+          aria-label={`Delete ${title} category`}
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete category?</AlertDialogTitle>
+          <AlertDialogDescription className="text-zinc-400">
+            This will permanently delete <span className="text-zinc-100 font-medium">"{title}"</span> and all <span className="text-zinc-100 font-medium">{itemCount} items</span>. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700">Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onDelete}
+            className="bg-red-500 text-white hover:bg-red-600 border-none"
+          >
+            Delete Everything
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

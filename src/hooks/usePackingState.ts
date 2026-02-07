@@ -343,6 +343,14 @@ export function usePackingState() {
     [setItems]
   )
 
+  const deleteCategory = useCallback(
+    (category: string) => {
+      setItems((current) => current.filter((item) => item.category !== category))
+      setCategoryList((current) => current.filter((c) => c !== category))
+    },
+    [setCategoryList, setItems]
+  )
+
   const moveItemToCategory = useCallback(
     (id: string, category: string) => {
       const nextCategory = normalizeCategoryName(category || DEFAULT_CATEGORY)
@@ -440,6 +448,7 @@ export function usePackingState() {
     addItems,
     toggleItem,
     deleteItem,
+    deleteCategory,
     moveItemToCategory,
     resetItems,
     shareUrl,

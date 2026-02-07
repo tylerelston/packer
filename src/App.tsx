@@ -32,6 +32,7 @@ export function App() {
     addItems,
     toggleItem,
     deleteItem,
+    deleteCategory,
     moveItemToCategory,
     resetItems,
     share,
@@ -245,6 +246,7 @@ export function App() {
               layout="row"
               onDragStart={() => setIsDragging(true)}
               onDragEnd={() => setIsDragging(false)}
+              onDeleteCategory={deleteCategory}
             />
           ) : null}
           {showUncategorizedStrip ? (
@@ -279,6 +281,7 @@ export function App() {
                   onItemDrop={moveItemToCategory}
                   onDragStart={() => setIsDragging(true)}
                   onDragEnd={() => setIsDragging(false)}
+                  onDeleteCategory={deleteCategory}
                 />
               ))}
             </div>
